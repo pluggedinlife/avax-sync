@@ -1,5 +1,7 @@
 import prisma from "../prisma";
 import web3 from "../web3";
+import { Prisma } from "@prisma/client";
+import moment from "moment";
 
 export async function syncTransactions() {
   // Fetch the latest block number from the database
@@ -13,47 +15,51 @@ export async function syncTransactions() {
 
   // Poll for new blocks every 10 seconds
   setInterval(async () => {
-    // try {
-    //   const currentBlock = await web3.eth.getBlockNumber();
-    //   if (Number(currentBlock) > Number(latestBlock)) {
-    //     for (
-    //       let blockNumber = Number(latestBlock) + 1;
-    //       blockNumber <= currentBlock;
-    //       blockNumber++
-    //     ) {
-    //       const block = await web3.eth.getBlock(blockNumber, true); // Fetch block with transactions
-    //       // just insert the data
-    //       if (block && block.transactions.length > 0) {
-    //         for (const tx of block.transactions) {
-    //           // Check if transaction already exists
-    //           const existingTx = await prisma.transactions.findUnique({
-    //             where: { transactionHash: tx.hash },
-    //           });
-    //           if (!existingTx) {
-    //             //   Save transaction to database
-    //             await prisma.transactions.create({
-    //               data: {
-    //                 block_number: block.number.toString(),
-    //                 transactionHash: tx.hash,
-    //                 from: tx.from || "",
-    //                 to: tx.to || "",
-    //                 value: tx.value.toString(),
-    //                 gas: tx.gas,
-    //                 gasPrice: tx.gasPrice.toString(),
-    //                 timestamp: block.timestamp,
-    //               },
-    //             });
-    //           }
-    //           await prisma.transactions.create({
-    //             data: newRecord,
-    //           });
-    //         }
-    //       }
-    //     }
-    //     latestBlock = currentBlock;
-    //   }
-    // } catch (error) {
-    //   console.error("Error syncing transactions:", error);
-    // }
-  }, 5000); // Poll every 10 seconds
+    try {
+      const currentBlock = await web3.eth.getBlockNumber();
+
+      if (Number(currentBlock) > Number(latestBlock)) {
+        for (
+          let blockNumber = Number(latestBlock) + 1;
+          blockNumber <= currentBlock;
+          blockNumber++
+        ) {
+          const block = await web3.eth.getBlock(blockNumber, true);
+          console.log(
+            `${moment().format()} N[${
+              block.number
+            }] block received with total ${
+              block.transactions.length
+            } transactions`
+          );
+          if (
+            block.transactions != undefined &&
+            block.transactions.length > 0
+          ) {
+            for (const tx of block.transactions) {
+              if (typeof tx === "string") {
+                // Handle transaction hash
+                console.log("Transaction Hash:", tx);
+              } else {
+                let newTransaction: Prisma.transactionsCreateInput = {
+                  timestamp: moment.unix(Number(block.timestamp)).format(),
+                  block_number: Number(block.number),
+                  tx_index: Number(tx.transactionIndex),
+                  from: String(tx.from),
+                  to: String(tx.to),
+                  value: Number(tx.value),
+                  gas_limit: Number(tx.gasLimit) || 0,
+                  gas_used: Number(block.gasUsed) || 0,
+                  gas_price: Number(tx.gasPrice) || 0,
+                };
+                await prisma.transactions.create({ data: newTransaction });
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error syncing transactions:", error);
+    }
+  }, 10000); // Poll every 10 seconds
 }
