@@ -4,7 +4,6 @@ import { Prisma } from "@prisma/client";
 import moment from "moment";
 
 export async function syncTransactions() {
-  // Fetch the latest block number from the database
   const latestTx = await prisma.transactions.findFirst({
     orderBy: { block_number: "desc" },
   });
@@ -13,7 +12,6 @@ export async function syncTransactions() {
     ? Number(latestTx.block_number)
     : await web3.eth.getBlockNumber();
 
-  // Poll for new blocks every 10 seconds
   setInterval(async () => {
     try {
       const currentBlock = await web3.eth.getBlockNumber();
@@ -38,7 +36,6 @@ export async function syncTransactions() {
           ) {
             for (const tx of block.transactions) {
               if (typeof tx === "string") {
-                // Handle transaction hash
                 console.log("Transaction Hash:", tx);
               } else {
                 let newTransaction: Prisma.transactionsCreateInput = {
