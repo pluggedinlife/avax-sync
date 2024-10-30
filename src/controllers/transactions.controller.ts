@@ -51,7 +51,6 @@ export default class TransactionController {
         ],
       });
 
-      list = TransactionController.convertResponse(list);
       res.status(200).json({ data: list, count: count });
     } catch (e) {
       console.log(`Something went wrong in TransactionController: `, e);
@@ -113,39 +112,9 @@ export default class TransactionController {
         ],
       });
 
-      list = TransactionController.convertResponse(list);
       res.status(200).json({ data: list, count: count });
     } catch (e) {
       console.log(`Something went wrong in TransactionController: `, e);
     }
-  }
-
-  private static convertResponse(list: any) {
-    return list.map((item: any) => {
-      item.gas_limit = this.serializeData(item.gas_limit);
-      item.gas_price = this.serializeData(item.gas_price);
-      item.gas_used = this.serializeData(item.gas_used);
-      return item;
-    });
-  }
-
-  private static serializeData(data: any) {
-    return JSON.stringify(data, (key, value) => {
-      // Check if value is a BigInt and convert it to a string
-      if (typeof value === "bigint") {
-        return value.toString();
-      }
-      return value;
-    });
-  }
-
-  private static deserializeData(jsonString: string) {
-    return JSON.parse(jsonString, (key, value) => {
-      // Check if the value is a string that can be converted to BigInt
-      if (typeof value === "string" && !isNaN(Number(value))) {
-        return BigInt(value);
-      }
-      return value;
-    });
   }
 }

@@ -48,9 +48,9 @@ export async function syncTransactions() {
                   from: String(tx.from),
                   to: String(tx.to),
                   value: Number(tx.value),
-                  gas_limit: Number(tx.gasLimit) || 0,
-                  gas_used: Number(block.gasUsed) || 0,
-                  gas_price: Number(tx.gasPrice) || 0,
+                  gas_limit: Number(block.gasLimit),
+                  gas_used: Number(block.gasUsed),
+                  gas_price: Number(tx.gasPrice),
                 };
                 await prisma.transactions.create({ data: newTransaction });
               }
