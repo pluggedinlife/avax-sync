@@ -18,14 +18,14 @@ model transactions {
   id           Int      @id @default(autoincrement())
   timestamp    DateTime @db.Timestamptz
   status       Boolean  @default(false)
-  block_number BigInt   @db.BigInt
+  block_number Decimal  @db.Decimal
   tx_index     Int
   from         String
   to           String
-  value        BigInt   @db.BigInt
-  gas_limit    BigInt   @db.BigInt
-  gas_used     BigInt   @db.BigInt
-  gas_price    BigInt   @db.BigInt
+  value        Decimal  @db.Decimal
+  gas_limit    Decimal  @db.Decimal
+  gas_used     Decimal  @db.Decimal
+  gas_price    Decimal  @db.Decimal
 
   @@index([block_number])
 }
